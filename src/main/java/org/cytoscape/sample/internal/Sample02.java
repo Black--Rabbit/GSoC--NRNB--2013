@@ -14,12 +14,11 @@ public class Sample02 extends AbstractCyAction {
 	private CySwingApplication desktopApp;
 	private final CytoPanel cytoPanelSouth;
 	private MyCytoPanel myCytoPanel;
-
 	
 	public Sample02(CySwingApplication desktopApp,
 			MyCytoPanel myCytoPanel){
-		// Add a menu item -- Apps->sample02
-		super("Panel Demo");
+		// Add a menu item -- Apps->PanelDemo
+		super("PanelDemo");
 		setPreferredMenu("Apps");
 
 		this.desktopApp = desktopApp;
@@ -29,8 +28,9 @@ public class Sample02 extends AbstractCyAction {
 		this.myCytoPanel = myCytoPanel;
 	}
 	
+	
 	public void actionPerformed(ActionEvent e) {
-		// If the state of the cytoPanelWest is HIDE, show it
+		// If the state of the cytoPanelSouth is HIDE, show it
 		if (cytoPanelSouth.getState() == CytoPanelState.HIDE) {
 			cytoPanelSouth.setState(CytoPanelState.DOCK);
 		}	
@@ -42,3 +42,5 @@ public class Sample02 extends AbstractCyAction {
 		}
 		cytoPanelSouth.setSelectedIndex(index);
 	}
+
+}
