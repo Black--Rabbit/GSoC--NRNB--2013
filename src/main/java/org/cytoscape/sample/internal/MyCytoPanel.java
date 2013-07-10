@@ -1,6 +1,8 @@
 package org.cytoscape.sample.internal;
 
 import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.Icon;
 import javax.swing.JPanel;
@@ -8,59 +10,75 @@ import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
 import javax.swing.JLabel;
 
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.swing.JOptionPane;
-import javax.swing.event.TableModelEvent;
+import javax.swing.*;
+import java.awt.*;
 import javax.swing.table.AbstractTableModel;
 
-import org.cytoscape.browser.internal.util.TableBrowserUtil;
-import org.cytoscape.model.CyColumn;
-import org.cytoscape.model.CyIdentifiable;
-import org.cytoscape.model.CyNetwork;
-import org.cytoscape.model.CyRow;
-import org.cytoscape.model.CyTable;
-import org.cytoscape.model.CyTableManager;
-import org.cytoscape.model.events.RowsCreatedEvent;
-import org.cytoscape.model.events.RowsCreatedListener;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.JButton;
-  
-public class MyCytoPanel extends JPanel implements {
+public class MyCytoPanel extends JPanel implements CytoPanelComponent {
 	
 	private static final long serialVersionUID = 8292806967891823933L;
 
 
 	public MyCytoPanel() {
-		
-		JLabel lbXYZ = new JLabel("This is my Panel");
-		JButton button = new JButton("Load");
-		JTable table = new JTable(new MyTableModel());
-		//Create the scroll pane and add the table to it.
-		JScrollPane scrollPane = new JScrollPane(table);
-		//Add action listener to button
-		button.addActionListener(new ActionListener() {
-		public void actionPerformed(ActionEvent e)
-		  {
-		    //Execute when button is pressed
-		    CyTable nodeTable = new cyNetworkTableManager.getTable(currentNetwork, CyNode.class, CyNetwork.DEFAULT_ATTRS);
-		    CyNetwork currentNetwork = new CyApplicationManager.getCurrentNetwork();
-		  }
-		});
-		//Add the scroll pane to this panel.
-		this.add(scrollPane);
-		this.add(button);
-		this.add(lbXYZ);
-		this.setVisible(true);
-	}
+	      BoxLayout boxLayout = new BoxLayout( this , BoxLayout.Y_AXIS );
+	      this.setLayout(boxLayout);
+	      //JLabel lbXYZ = new JLabel("This is my Filter Table for Panel Demo");
 
+	      JButton button = new JButton("Demo Button");
+	      button.addActionListener(new ActionListener() {
+	      public void actionPerformed(ActionEvent e)
+	      {
+		  //Execute when button is pressed
+		  System.out.println("You clicked the button");
+	      }
+	      });
+
+	      JScrollPane scrollpanebig = new JScrollPane(this);
+	      this.add(button);
+	      final JTable table = new JTable(new MytableModel());
+	      JScrollPane scrollPane = new JScrollPane(table);
+	      this.add(scrollPane);
+	      //this.add(lbXYZ);
+	      this.setVisible(true);
+	}
+public class MytableModel extends AbstractTableModel {
+	  String[] columnNames = {"Col A", "Col B", "Col C", "Col D", "Col E"};
+	  Object[][] data = {
+	      {"K", "S", "Snow", new Integer(5), new Boolean(false)},
+	      {"J", "D", "Row", new Integer(3), new Boolean(true)},
+	      {"S", "B", "Kite", new Integer(2), new Boolean(false)},
+	      {"J", "W", "Speed", new Integer(20), new Boolean(true)},
+	      {"J", "B", "Pool", new Integer(10), new Boolean(false)}
+	  };
+
+	public int getColumnCount() {
+            return columnNames.length;
+        }
+
+        public int getRowCount() {
+            return data.length;
+        }
+
+        public String getColumnName(int col) {
+            return columnNames[col];
+        }
+
+        public Object getValueAt(int row, int col) {
+            return data[row][col];
+        }
+
+        /*
+         * JTable uses this method to determine the default renderer/
+         * editor for each cell.  If we didn't implement this method,
+         * then the last column would contain text ("true"/"false"),
+         * rather than a check box.
+         */
+        public Class getColumnClass(int c) {
+            return getValueAt(0, c).getClass();
+        }
+
+
+}
 
 	public Component getComponent() {
 		return this;
@@ -73,457 +91,11 @@ public class MyCytoPanel extends JPanel implements {
 
 
 	public String getTitle() {
-		return "Filter Table";
+		return "FilterTable";
 	}
 
 
 	public Icon getIcon() {
 		return null;
 	}
-
-
-public final class MyTableModel extends AbstractTableModel {
-
-	private static final long serialVersionUID = -517521404005631245L;
-
-	private final CyTable dataTable;
-	private final Class<? extends CyIdentifiable> tableType;
-	private final EquationCompiler compiler;
-
-	private final CyTableManager tableManager;
-
-	// If this is FALSE then we show all rows
-	private boolean regularViewMode;
-
-	private List<String> attrNames;
-
-	private Collection<CyRow> selectedRows = null;
-
-	private Object[] rowIndexToPrimaryKey;
-	private int maxRowIndex;
-
-
-
-	public MyTableModel(final CyTable dataTable, final Class<? extends CyIdentifiable> tableType, final EquationCompiler compiler,
-			final CyTableManager tableManager) {
-		this.dataTable = dataTable;
-		this.compiler = compiler;
-		this.regularViewMode = false;
-		this.tableManager = tableManager;
-		this.tableType = tableType;
-
-		attrNames = getAttributeNames(dataTable);
-
-		// add each row to an array to allow fast lookup from an index
-		final Collection<CyRow> rows = dataTable.getAllRows();
-		this.rowIndexToPrimaryKey = new Object[rows.size()];
-		this.maxRowIndex = 0;
-		final String primaryKey = dataTable.getPrimaryKey().getName();
-		for ( CyRow row : rows )
-			rowIndexToPrimaryKey[maxRowIndex++] = row.getRaw(primaryKey);
-	}
-
-	private List<String> getAttributeNames(CyTable table) {
-		ArrayList<String> names = new ArrayList<String>();
-		for (CyColumn column : table.getColumns()) {
-			names.add(column.getName());
-		}
-		return names;
-	}
-
-	CyTable getDataTable() {
-		return dataTable;
-	}
-
-	public CyTable getAttributes() { return dataTable; }
-
-	@Override
-	public Class<?> getColumnClass(final int columnIndex) {
-		return ValidatedObjectAndEditString.class;
-	}
-
-	List<String> getAllAttributeNames() {
-		return new ArrayList<String>(attrNames);
-	}
-
-	@Override
-	public int getRowCount() {
-		final Collection<CyColumn> columns = dataTable.getColumns();
-		if (columns.isEmpty())
-			return 0;
-
-		// Show selection mode OR all rows
-		if (regularViewMode)
-			return dataTable.getMatchingRows(CyNetwork.SELECTED, Boolean.TRUE).size();
-		else
-			return dataTable.getRowCount();
-
-	}
-
-	// this should return the number of columns in model
-	@Override
-	public int getColumnCount() {
-		return attrNames.size();
-	}
-
-
-	public Object getValueAt(final int rowIndex, final String columnName) {
-		final CyRow row = getCyRow(rowIndex);
-		return getValidatedObjectAndEditString(row, columnName);
-	}
-
-	@Override
-	public Object getValueAt(final int rowIndex, final int columnIndex) {
-		final String columnName = getColumnName(columnIndex);
-		final CyRow row = getCyRow(rowIndex);
-
-		return getValidatedObjectAndEditString(row, columnName);
-	}
-
-	CyColumn getColumn(final int columnIndex)  {
-		final String columnName = getColumnName(columnIndex);
-
-		return dataTable.getColumn(columnName);
-	}
-
-	CyColumn getColumnByModelIndex(final int modelIndex)  {
-		final String columnName = getColumnName( modelIndex);
-
-		return dataTable.getColumn(columnName);
-	}
-
-	public CyRow getCyRow(final int rowIndex) {
-		if (regularViewMode) {
-			if (selectedRows == null)
-				selectedRows = dataTable.getMatchingRows(CyNetwork.SELECTED, true);
-
-			int count = 0;
-			CyRow cyRow = null;
-			for (final CyRow selectedRow : selectedRows) {
-				if (count == rowIndex) {
-					cyRow = selectedRow;
-					break;
-				}
-				++count;
-			}
-
-			return cyRow;
-		} else {
-			return dataTable.getRow(rowIndexToPrimaryKey[rowIndex]);
-		}
-	}
-
-/*
-	private ValidatedObjectAndEditString getValidatedObjectAndEditString(final CyRow row,
-			final String columnName)
-	{
-		if (row == null)
-			return null;
-
-		Object raw = row.getRaw(columnName);
-		if (raw == null) {
-			CyColumn column = row.getTable().getColumn(columnName);
-			raw = column.getDefaultValue();
-		}
-		if (raw == null)
-			return null;
-
-		// Optimisation hack:
-
-
-		Object cooked;
-		if (!(raw instanceof Equation))
-			cooked = raw;
-		else {
-			cooked = getColumnValue(row, columnName);
-		}
-
-		String editString = createEditString(raw);
-		if (cooked != null)
-			return new ValidatedObjectAndEditString(cooked, editString);
-
-		final String lastInternalError = dataTable.getLastInternalError();
-		return new ValidatedObjectAndEditString(cooked, editString, lastInternalError);
-	}
-
-	private String createEditString(Object raw) {
-		if (raw instanceof List) {
-			StringBuilder builder = new StringBuilder();
-			builder.append('[');
-			boolean first = true;
-			for (Object item : (List<?>) raw) {
-				if (first) {
-					first = false;
-				} else {
-					builder.append(',');
-				}
-				if (item instanceof String) {
-					builder.append('"');
-					escape(item.toString(), builder);
-					builder.append('"');
-				} else {
-					builder.append(item.toString());
-				}
-			}
-			builder.append(']');
-			return builder.toString();
-		}
-		return raw.toString();
-	}
-
-	private void escape(String string, StringBuilder builder) {
-		for (int i = 0; i < string.length(); i++) {
-			char c = string.charAt(i);
-			switch (c) {
-			case '\b':
-				builder.append("\\b");
-				break;
-			case '\t':
-				builder.append("\\t");
-				break;
-			case '\n':
-				builder.append("\\n");
-				break;
-			case '\f':
-				builder.append("\\f");
-				break;
-			case '\r':
-				builder.append("\\r");
-				break;
-			case '\\':
-				builder.append("\\\\");
-				break;
-			case '"':
-				builder.append("\\\"");
-				break;
-			default:
-				builder.append(c);
-			}
-		}
-	}
-*/
-	private static Object getColumnValue(final CyRow row, final String columnName) {
-		final CyColumn column = row.getTable().getColumn(columnName);
-		if (column.getType() == List.class) {
-			final Class<?> listElementType = column.getListElementType();
-			return row.getList(columnName, listElementType);
-		} else{
-			return row.get(columnName, column.getType());
-		}
-	}
-
-/*
-	@Override
-	public synchronized void handleEvent(RowsCreatedEvent e) {
-		if(!e.getSource().equals(this.dataTable))
-			return ;
-
-		selectedRows = null;
-
-		// add new rows to rowIndexToPrimaryKey array
-		Object[] newRowIndex = new Object[rowIndexToPrimaryKey.length + e.getPayloadCollection().size()];
-		System.arraycopy(rowIndexToPrimaryKey,0,newRowIndex,0,rowIndexToPrimaryKey.length);
-		rowIndexToPrimaryKey = newRowIndex;
-		for ( Object pk : e.getPayloadCollection() )
-			rowIndexToPrimaryKey[maxRowIndex++] = pk;
-
-		fireTableDataChanged();
-	}
-*/
-	/**
-	 * Switch view mode.
-	 *
-	 *
-	 * @param showAll
-	 */
-	void setShowAll(boolean showAll) {
-		// only set to regular view mode if selected column exists
-		if ( !showAll ) {
-			CyColumn selectedColumn = dataTable.getColumn(CyNetwork.SELECTED);
-			this.regularViewMode = selectedColumn != null && selectedColumn.getType() == Boolean.class;
-
-			// otherwise always display everything
-		} else {
-			regularViewMode = false;
-		}
-	}
-
-	void updateShowAll() {
-		fireTableDataChanged();
-	}
-
-	boolean isShowAll() {
-		return !regularViewMode;
-	}
-
-	public String getCyColumnName( final int column){
-		return (String) dataTable.getColumns().toArray()[column];
-	}
-
-	@Override
-	public String getColumnName(final int column) {
-		return mapColumnIndexToColumnName(column);
-	}
-
-
-
-	int mapColumnNameToColumnIndex(final String columnName) {
-
-		if(attrNames.contains(columnName))
-			return attrNames.indexOf(columnName);
-		return -1;
-	}
-
-	private String mapColumnIndexToColumnName(final int index) {
-		if (index <= attrNames.size())
-			return attrNames.get(index);
-
-		throw new ArrayIndexOutOfBoundsException();
-
-	}
-
-	CyRow getRow(final Object suid) {
-		return dataTable.getRow(suid);
-	}
-
-
-/*
-	@Override
-	public void setValueAt(final Object value, final int rowIndex, final int columnIndex) {
-		final String text = (String)value;
-		final CyRow row = getCyRow(rowIndex);
-		final String columnName = mapColumnIndexToColumnName(columnIndex);
-		final Class<?> columnType = dataTable.getColumn(columnName).getType();
-
-		if (text.isEmpty()) {
-			if (!row.isSet(columnName))
-				return;
-			row.set(columnName, null);
-		} else if (text.startsWith("=")) {
-			final Map<String, Class<?>> variableNameToTypeMap = new HashMap<String, Class<?>>();
-			initVariableNameToTypeMap(variableNameToTypeMap);
-			if (compiler.compile(text, variableNameToTypeMap)) {
-
-				final Equation eqn = compiler.getEquation();
-				final Class<?> eqnType = eqn.getType();
-
-				// Is the equation type compatible with the column type?
-				if (eqnTypeIsCompatible(columnType, eqnType)){
-					row.set(columnName, eqn);
-				}
-				else { // The equation type is incompatible w/ the column type!
-					final Class<?> expectedType = columnType == Integer.class ? Long.class : columnType;
-					final String errorMsg = "Equation result type is "
-						+ getUnqualifiedName(eqnType) + ", column type is "
-						+ getUnqualifiedName(columnType) + ".";
-					final Equation errorEqn = compiler.getErrorEquation(text, expectedType, errorMsg);
-					row.set(columnName, errorEqn);
-				}
-			} else {
-				final Class<?> eqnType = columnType == Integer.class ? Long.class : columnType;
-				final String errorMsg = compiler.getLastErrorMsg();
-				final Equation errorEqn = compiler.getErrorEquation(text, eqnType, errorMsg);
-				row.set(columnName, errorEqn);
-			}
-		} else { // Not an equation!
-
-			ArrayList parsedData = TableBrowserUtil.parseCellInput(dataTable, columnName, value);
-			if (parsedData.get(0) != null)
-				row.set(columnName, parsedData.get(0));
-			else {
-				//Error!
-				showErrorWindow(parsedData.get(1).toString());
-				//+ " should be an Integer (or the number is too big/small).");
-			}
-		}
-
-		final TableModelEvent event = new TableModelEvent(this, rowIndex, rowIndex, columnIndex);
-		fireTableChanged(event);
-		fireTableDataChanged();
-	}
-*/
-/*
-	// Pop-up window for error message
-	private static void showErrorWindow(final String errMessage) {
-		JOptionPane.showMessageDialog(null, errMessage, "Invalid Value",
-				JOptionPane.ERROR_MESSAGE);
-	}
-*/
-/*
-
-	private boolean eqnTypeIsCompatible(final Class<?> columnType, final Class<?> eqnType) {
-		if (columnType == eqnType)
-			return true;
-		if (columnType == String.class) // Anything can be trivially converted to a string.
-			return true;
-		if (columnType == Integer.class && (eqnType == Long.class || eqnType == Double.class))
-			return true;
-		if (columnType == Double.class && eqnType == Long.class)
-			return true;
-		if (columnType == Boolean.class && (eqnType == Long.class || eqnType == Double.class))
-			return true;
-
-		return false;
-	}
-
-	private String getUnqualifiedName(final Class<?> type) {
-		final String typeName = type.getName();
-		final int lastDotPos = typeName.lastIndexOf('.');
-		return lastDotPos == -1 ? typeName : typeName.substring(lastDotPos + 1);
-	}
-
-	private void initVariableNameToTypeMap(final Map<String, Class<?>> variableNameToTypeMap) {
-		for (final CyColumn column : dataTable.getColumns()) {
-			final Class<?> type = column.getType();
-			final String columnName = column.getName();
-			if (type == String.class)
-				variableNameToTypeMap.put(columnName, String.class);
-			else if (type == Double.class)
-				variableNameToTypeMap.put(columnName, Double.class);
-			else if (type == Integer.class)
-				variableNameToTypeMap.put(columnName, Long.class);
-			else if (type == Long.class)
-				variableNameToTypeMap.put(columnName, Long.class);
-			else if (type == Boolean.class)
-				variableNameToTypeMap.put(columnName, Boolean.class);
-			else if (type == List.class)
-				variableNameToTypeMap.put(columnName, List.class);
-			else
-				throw new IllegalStateException("unknown type \"" + type.getName()
-						+ "\".");
-		}
-	}
-*/
-
-	@Override
-	public boolean isCellEditable(final int rowIndex, final int columnIndex) {
-		CyColumn column = getColumnByModelIndex(columnIndex);
-		return !column.isPrimaryKey();
-	}
-
-	public boolean isPrimaryKey(int columnIndex) {
-		CyColumn column = getColumnByModelIndex(columnIndex);
-		return column.isPrimaryKey();
-	}
-
-	void clearSelectedRows() {
-		selectedRows = null;
-	}
-
-	void setColumnName(int index, String name) {
-		attrNames.set(index, name);
-	}
-
-	void removeColumn(int index) {
-		attrNames.remove(index);
-	}
-
-	void addColumn(String name) {
-		attrNames.add(name);
-	}
-
-	public Class<? extends CyIdentifiable> getTableType() {
-		return tableType;
-	}
-}
 }
