@@ -14,6 +14,26 @@ import javax.swing.*;
 import java.awt.*;
 import javax.swing.table.AbstractTableModel;
 
+
+
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.swing.JOptionPane;
+import javax.swing.event.TableModelEvent;
+import org.cytoscape.browser.internal.util.TableBrowserUtil;
+import org.cytoscape.model.CyColumn;
+import org.cytoscape.model.CyIdentifiable;
+import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.CyRow;
+import org.cytoscape.model.CyTable;
+import org.cytoscape.model.CyTableManager;
+import org.cytoscape.model.events.RowsCreatedEvent;
+import org.cytoscape.model.events.RowsCreatedListener;
+
 public class MyCytoPanel extends JPanel implements CytoPanelComponent {
 	
 	private static final long serialVersionUID = 8292806967891823933L;
@@ -29,7 +49,9 @@ public class MyCytoPanel extends JPanel implements CytoPanelComponent {
 	      public void actionPerformed(ActionEvent e)
 	      {
 		  //Execute when button is pressed
-		 
+		  CyNetwork currentNetwork = CyApplicationManager.getCurrentNetwork();
+		  CyTable nodeTable = CyNetworkTableManager.getTable(currentNetwork, CyNode.class, CyNetwork.DEFAULT_ATTRS);
+		  
 	      }
 	      });
 
@@ -42,41 +64,29 @@ public class MyCytoPanel extends JPanel implements CytoPanelComponent {
 	      this.setVisible(true);
 	}
 public class MytableModel extends AbstractTableModel {
-	  String[] columnNames = {"Col A", "Col B", "Col C", "Col D", "Col E"};
-	  Object[][] data = {
-	      {"K", "S", "Snow", new Integer(5), new Boolean(false)},
-	      {"J", "D", "Row", new Integer(3), new Boolean(true)},
-	      {"S", "B", "Kite", new Integer(2), new Boolean(false)},
-	      {"J", "W", "Speed", new Integer(20), new Boolean(true)},
-	      {"J", "B", "Pool", new Integer(10), new Boolean(false)}
-	  };
+	  String[] columnNames = {"Shared Name", "Name", "AverageShortestPathLength", "ClusteringCoefficient", "ClosenessCentrality", "IsSingleNode", "PartnerOfMultiEdgedNodePairs", "SelfLoops", "Eccentricity", "Stress", "Degree", "BetweenessCentrality", "NeighborhoodConnectivity", "NumberOfDirectedEdges", "NumberOfUndirectedEdges", "Radiality", "TopologicalCoefficient", "gal4RGexp", "gal80Rsig", "gal80Rexp", "COMMON", "gal4RGsig", "gal1RGexp", "gal1RGsig"};
 
-	public int getColumnCount() {
-            return columnNames.length;
-        }
-
-        public int getRowCount() {
-            return data.length;
-        }
-
-        public String getColumnName(int col) {
-            return columnNames[col];
-        }
-
-        public Object getValueAt(int row, int col) {
-            return data[row][col];
-        }
-
-        /*
-         * JTable uses this method to determine the default renderer/
-         * editor for each cell.  If we didn't implement this method,
-         * then the last column would contain text ("true"/"false"),
-         * rather than a check box.
-         */
-        public Class getColumnClass(int c) {
-            return getValueAt(0, c).getClass();
-        }
-
+	  //getting the number of rows in the current working node table
+	  int rowcount = nodeTable.getRowCount();
+	  // declaring the object for JTable data, providing the fixed columns and obtained rows
+	  Object[][] data = new Object[rowcount][24];
+	  /*
+	    Operating one by one on CyColumns [1]
+	    get the class type of the current working column [2]
+	    then obtain the values of the current working column in a list [3]
+	    then add those values column wise to the Jtable created [4]
+	  */
+	  for(int i = 0; i < 24; i++){
+	  
+	    CyColumn currentWorkingColumn = nodeTable.getColumn(columnNames[i]);//[1]
+	    Class<?> columnClassType = currentWorkingColumn.getType();//[2]
+	    List<columnClassType> currentWorkingColumnValues = currentWorkingColumn.getValues(columnClassType);//[3]
+	    //[4]
+	    for(int j=0;j<rowcount;j++){
+	      data[j][i] = currentWorkingColumnValues[j];
+	    }
+	    
+	  }	
 
 }
 
